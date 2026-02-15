@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0ea5e9">
+    <meta name="description" content="Track your gym workouts with progressive overload">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Gym Tracker">
+    
+    <title>💪 Gym Tracker Pro</title>
+    
+    <link rel="manifest" href="#" id="manifestPlaceholder">
+    
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0ea5e9",
+                        "primary-light": "#38bdf8",
+                        "primary-dark": "#0284c7",
+                        "secondary": "#8b5cf6",
+                        "secondary-light": "#a78bfa",
+                        "success": "#10b981",
+                        "background-light": "#f0f9ff",
+                        "background-dark": "#0f172a",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1e293b",
+                        "card-dark": "#334155",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "2xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'glow': '0 4px 20px -5px rgba(14, 165, 233, 0.4)',
+                        'glow-purple': '0 4px 20px -5px rgba(139, 92, 246, 0.4)',
+                    }
+                },
+            },
+        }
+    </script>
+    
+    <style>
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #0ea5e9; border-radius: 2px; }
+        
+        .text-gradient {
+            background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+        }
+        
+        .bg-gradient-accent {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .screen { display: none; animation: fadeIn 0.3s ease; }
+        .screen.active { display: block; }
+        .modal { display: none; }
+        .modal.active { display: flex; }
+        
+        /* Install prompt styling */
+        .install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            max-width: 90%;
+            width: 400px;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+
+<!-- Install Prompt -->
+<div id="installPrompt" class="install-prompt hidden">
+    <div class="bg-surface-light dark:bg-surface-dark border border-primary/20 rounded-xl shadow-2xl p-4 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-gradient-primary flex items-center justify-center text-white">
+            <span class="material-icons text-2xl">add_to_home_screen</span>
+        </div>
+        <div class="flex-1">
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white">Install App</h3>
+            <p class="text-xs text-gray-600 dark:text-gray-400">Add to home screen for quick access</p>
+        </div>
+        <button onclick="installApp()" class="px-4 py-2 bg-gradient-primary text-white rounded-lg text-sm font-semibold hover:shadow-glow transition-all">
+            Install
+        </button>
+        <button onclick="dismissInstall()" class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <span class="material-icons text-sm">close</span>
+        </button>
+    </div>
+</div>
+
+<!-- HOME SCREEN -->
+<div id="homeScreen" class="screen active">
+    <div class="w-full max-w-md mx-auto min-h-screen relative flex flex-col bg-background-light dark:bg-background-dark">
+        <!-- Ambient Glow -->
+        <div class="absolute top-0 right-0 w-96 h-96 bg-primary/10 dark:bg-primary/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+        <div class="absolute bottom-0 left-0 w-96 h-96 bg-secondary/10 dark:bg-secondary/5 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+        
+        <!-- Header -->
+        <header class="relative z-10 px-6 pt-12 pb-4 flex justify-between items-center">
+            <div class="w-10"></div>
+            <h1 class="text-3xl font-bold tracking-tight text-gradient">GYM TRACKER</h1>
+            <button onclick="toggleTheme()" class="w-10 h-10 flex items-center justify-center text-primary hover:bg-primary/10 rounded-full transition-colors">
+                <span class="material-icons" id="themeIcon">dark_mode</span>
+            </button>
+        </header>
+        
+        <!-- Stats -->
+        <div class="relative z-10 px-6 py-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col items-center p-5 rounded-2xl bg-surface-light dark:bg-surface-dark border border-primary/20 shadow-lg">
+                    <span class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 font-semibold">Total Workouts</span>
+                    <span class="text-5xl font-bold text-gradient" id="totalWorkouts">0</span>
+                </div>
+                <div class="flex flex-col items-center p-5 rounded-2xl bg-surface-light dark:bg-surface-dark border border-secondary/20 shadow-lg">
+                    <span class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 font-semibold">Streak</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-5xl font-bold text-gradient" id="currentStreak">0</span>
+                        <span class="text-3xl">🔥</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Divider -->
+        <div class="px-8 my-4">
+            <div class="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+        </div>
+        
+        <!-- Workout List -->
+        <div class="relative z-10 flex-1 overflow-y-auto px-6 py-2 space-y-3 pb-32">
+            <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Your Split</h2>
+            <div id="daysList"></div>
+        </div>
+        
+        <!-- FAB -->
+        <div class="absolute bottom-24 right-6 z-20">
+            <button onclick="showAddDayModal()" class="w-16 h-16 rounded-full bg-gradient-primary text-white shadow-glow hover:shadow-2xl transition-all duration-300 flex items-center justify-center group hover:scale-110">
+                <span class="material-icons text-3xl transform group-hover:rotate-90 transition-transform">add</span>
+            </button>
+        </div>
+        
+        <!-- Bottom Nav -->
+        <nav class="absolute bottom-0 left-0 right-0 z-20 bg-surface-light/80 dark:bg-surface-dark/80 backdrop-blur-xl border-t border-gray-200 dark:border-gray-700 pb-6 pt-4 px-6">
+            <div class="flex justify-around items-center max-w-md mx-auto">
+                <button class="flex flex-col items-center gap-1 text-primary">
+                    <span class="material-icons text-2xl">dashboard</span>
+                    <span class="text-[10px] uppercase tracking-wider font-bold">Home</span>
+                </button>
+                <button onclick="showSettings()" class="flex flex-col items-center gap-1 text-gray-400 hover:text-primary transition-colors">
+                    <span class="material-icons text-2xl">settings</span>
+                    <span class="text-[10px] uppercase tracking-wider">Settings</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+</div>
+
+<!-- EXERCISES SCREEN -->
+<div id="exercisesScreen" class="screen">
+    <div class="w-full max-w-md mx-auto min-h-screen relative flex flex-col bg-background-light dark:bg-background-dark">
+        <div class="h-12 w-full shrink-0"></div>
+        
+        <header class="px-6 py-4 flex items-center justify-between shrink-0 z-20 bg-surface-light/50 dark:bg-surface-dark/50 backdrop-blur-md">
+            <button onclick="showHome()" class="p-2 rounded-full hover:bg-primary/10 transition-colors">
+                <span class="material-icons text-primary">arrow_back</span>
+            </button>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white" id="currentDayName">Push Day</h1>
+            <button onclick="editDayName()" class="p-2 rounded-full hover:bg-primary/10 transition-colors">
+                <span class="material-icons text-primary">edit</span>
+            </button>
+        </header>
+        
+        <main class="flex-1 overflow-y-auto px-6 pb-28 pt-4 space-y-3" id="exercisesList"></main>
+        
+        <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-background-light dark:from-background-dark via-background-light/95 dark:via-background-dark/95 to-transparent z-30 pointer-events-none">
+            <button onclick="showAddExerciseModal()" class="w-full bg-gradient-primary hover:shadow-glow text-white font-semibold text-base py-4 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 pointer-events-auto shadow-lg">
+                <span class="material-icons">add</span>
+                ADD EXERCISE
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- WORKOUT SCREEN -->
+<div id="workoutScreen" class="screen">
+    <div class="w-full max-w-md mx-auto h-screen flex flex-col relative overflow-hidden bg-background-light dark:bg-background-dark">
+        <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 dark:bg-primary/5 blur-[120px] rounded-full pointer-events-none"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-secondary/10 dark:bg-secondary/5 blur-[120px] rounded-full pointer-events-none"></div>
+        
+        <header class="pt-12 pb-2 px-6 flex justify-between items-center z-10">
+            <button onclick="exitWorkout()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-600 dark:text-gray-400">
+                <span class="material-icons">close</span>
+            </button>
+            <div class="text-xs font-bold tracking-widest uppercase text-primary" id="setCounter">Set 1 of 3</div>
+            <button class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-600 dark:text-gray-400">
+                <span class="material-icons">more_horiz</span>
+            </button>
+        </header>
+        
+        <main class="flex-1 flex flex-col items-center justify-start px-6 z-10 overflow-y-auto pb-32">
+            <div class="mt-6 mb-8 text-center">
+                <h1 class="text-4xl font-bold tracking-tight text-gray-900 dark:text-white mb-2" id="workoutExerciseName">Bench Press</h1>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1" id="lastPerformance"></p>
+            </div>
+            
+            <div id="warmupIndicator" class="w-full mb-4 bg-orange-500/20 border border-orange-500/40 rounded-xl p-3 text-center" style="display: none;">
+                <span class="text-orange-500 dark:text-orange-400 font-bold text-sm uppercase">🔥 WARM-UP SET</span>
+            </div>
+            
+            <div class="relative w-full flex flex-col items-center justify-center py-8 mb-8">
+                <div class="absolute inset-0 border-2 border-primary/20 rounded-full scale-[1.15] opacity-40"></div>
+                <div class="flex items-baseline gap-3 leading-none select-none">
+                    <span class="text-[6rem] font-bold text-gradient drop-shadow-2xl tracking-tighter" id="targetWeight">100</span>
+                    <div class="flex flex-col items-start -mb-4">
+                        <span class="text-3xl text-gray-400 font-medium opacity-80">kg</span>
+                        <span class="text-5xl text-gray-900 dark:text-white font-bold" id="targetReps">× 8</span>
+                    </div>
+                </div>
+                <div class="text-xs uppercase tracking-[0.2em] text-primary mt-5 font-bold">Target</div>
+            </div>
+            
+            <div class="w-full max-w-[320px] mb-10">
+                <div class="relative group">
+                    <div class="absolute -inset-0.5 bg-gradient-to-r from-primary to-secondary rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-500"></div>
+                    <div class="relative flex items-center bg-surface-light dark:bg-surface-dark rounded-2xl border-2 border-primary/30 p-1 pl-6 pr-1 shadow-xl">
+                        <div class="flex-1">
+                            <label class="text-xs text-gray-500 dark:text-gray-400 block uppercase tracking-wide font-semibold">Reps completed</label>
+                            <input type="number" id="repsInput" class="w-full bg-transparent border-none p-0 text-4xl font-bold text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:ring-0 appearance-none" placeholder="0" min="0" inputmode="numeric">
+                        </div>
+                        <button class="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center text-white hover:shadow-glow transition-all">
+                            <span class="material-icons text-xl">check</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="w-full space-y-3 mb-6" id="completedSets" style="display: none;">
+                <h3 class="text-xs uppercase tracking-widest text-gray-500 dark:text-gray-400 pl-4 mb-2 font-bold">Completed Sets</h3>
+            </div>
+        </main>
+        
+        <div class="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background-light dark:from-background-dark via-background-light/95 dark:via-background-dark/95 to-transparent z-50">
+            <div class="max-w-md mx-auto flex flex-col gap-4 items-center">
+                <div id="timerCard" class="relative w-28 h-28 mb-2 flex items-center justify-center" style="display: none;">
+                    <div class="absolute inset-0 rounded-full bg-primary/20 blur-xl"></div>
+                    <svg class="w-full h-full transform -rotate-90">
+                        <circle class="text-gray-300 dark:text-gray-700" cx="50%" cy="50%" fill="transparent" r="45%" stroke="currentColor" stroke-width="5"></circle>
+                        <circle class="text-primary" cx="50%" cy="50%" fill="transparent" r="45%" stroke="currentColor" stroke-linecap="round" stroke-width="5" id="timerProgressBar" style="stroke-dasharray: 283; stroke-dashoffset: 75; transition: stroke-dashoffset 1s linear;"></circle>
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <span class="text-2xl font-bold text-gray-900 dark:text-white tracking-widest tabular-nums" id="timerDisplay">2:00</span>
+                        <span class="text-[0.6rem] uppercase tracking-wider text-primary font-bold">Rest</span>
+                    </div>
+                </div>
+                
+                <button onclick="completeSet()" class="w-full bg-gradient-primary hover:shadow-glow active:scale-[0.98] text-white font-bold text-lg py-5 px-8 rounded-xl shadow-xl transition-all duration-200 flex items-center justify-center gap-2 group">
+                    <span class="tracking-wide">COMPLETE SET</span>
+                    <span class="material-icons text-xl group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SUMMARY SCREEN -->
+<div id="summaryScreen" class="screen">
+    <div class="w-full max-w-md mx-auto h-screen bg-background-light dark:bg-background-dark overflow-hidden flex flex-col">
+        <div class="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-primary/10 dark:from-primary/5 to-transparent pointer-events-none z-0"></div>
+        
+        <header class="relative z-10 flex justify-end p-6 pt-12">
+            <button onclick="showHome()" class="text-gray-400 hover:text-primary transition-colors">
+                <span class="material-icons text-3xl">close</span>
+            </button>
+        </header>
+        
+        <main class="relative z-10 flex-1 overflow-y-auto px-6 pb-32">
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-extrabold tracking-tight text-gradient uppercase mb-3">VICTORY</h1>
+                <p class="text-gray-500 dark:text-gray-400 text-sm tracking-widest uppercase font-medium">Session Complete</p>
+            </div>
+            
+            <div class="flex justify-center mb-12 relative">
+                <div class="absolute inset-0 m-auto w-72 h-72 border border-primary/10 rounded-full animate-pulse"></div>
+                <div class="w-56 h-56 rounded-full border-4 border-primary/40 bg-gradient-to-br from-surface-light to-primary/10 dark:from-surface-dark dark:to-primary/5 flex flex-col items-center justify-center relative shadow-2xl">
+                    <span class="text-primary text-xs uppercase tracking-wider mb-1 font-bold">Total Volume</span>
+                    <div class="flex items-baseline">
+                        <span class="text-5xl font-bold text-gray-900 dark:text-white tracking-tighter" id="totalVolume">0</span>
+                    </div>
+                    <span class="text-primary font-bold text-xl mt-1">KG</span>
+                </div>
+            </div>
+            
+            <div class="space-y-3" id="summaryList"></div>
+        </main>
+        
+        <div class="fixed bottom-0 left-0 w-full p-6 bg-gradient-to-t from-background-light dark:from-background-dark via-background-light/95 dark:via-background-dark/95 to-transparent z-50">
+            <button onclick="showHome()" class="w-full bg-gradient-primary hover:shadow-glow active:scale-[0.98] transition-all duration-200 text-white font-bold text-lg uppercase tracking-widest py-5 rounded-xl shadow-xl flex items-center justify-center gap-2">
+                <span>Finish Session</span>
+                <span class="material-icons text-xl">check_circle</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- SETTINGS SCREEN -->
+<div id="settingsScreen" class="screen">
+    <div class="w-full max-w-md mx-auto min-h-screen bg-background-light dark:bg-background-dark">
+        <div class="px-6 pt-8 pb-2">
+            <button onclick="showHome()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-primary/10 text-primary transition-colors">
+                <span class="material-icons">arrow_back</span>
+            </button>
+        </div>
+        
+        <header class="px-6 py-4">
+            <h1 class="text-4xl font-bold tracking-tight text-gray-900 dark:text-white">Settings</h1>
+            <p class="text-sm text-primary uppercase tracking-widest mt-2 font-semibold">Configuration</p>
+        </header>
+        
+        <main class="px-6 pb-8 space-y-8 mt-4">
+            <section>
+                <h2 class="text-xs font-bold tracking-[0.2em] text-gray-500 dark:text-gray-400 mb-4 uppercase pl-1">Rest Timer</h2>
+                <div class="bg-surface-light dark:bg-surface-dark rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-700">
+                    <div class="p-5 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                <span class="material-icons text-xl">timer</span>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-900 dark:text-white">Default Rest Time</span>
+                        </div>
+                        <select id="restTimeSelect" onchange="updateRestTime()" class="px-3 py-2 bg-gray-100 dark:bg-card-dark border border-gray-300 dark:border-gray-600 rounded-lg text-primary text-sm font-semibold">
+                            <option value="60">1 min</option>
+                            <option value="90">1.5 min</option>
+                            <option value="120" selected>2 min</option>
+                            <option value="180">3 min</option>
+                            <option value="240">4 min</option>
+                            <option value="300">5 min</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+            
+            <section>
+                <h2 class="text-xs font-bold tracking-[0.2em] text-gray-500 dark:text-gray-400 mb-4 uppercase pl-1">Data Management</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="exportData()" class="rounded-xl border-2 border-primary/40 bg-surface-light dark:bg-surface-dark p-5 flex flex-col items-center justify-center gap-3 hover:border-primary hover:shadow-glow transition-all">
+                        <span class="material-icons text-primary text-3xl">file_upload</span>
+                        <span class="text-sm font-semibold text-primary tracking-wide">EXPORT</span>
+                    </button>
+                    <button onclick="importData()" class="rounded-xl border-2 border-secondary/40 bg-surface-light dark:bg-surface-dark p-5 flex flex-col items-center justify-center gap-3 hover:border-secondary hover:shadow-glow-purple transition-all">
+                        <span class="material-icons text-secondary text-3xl">file_download</span>
+                        <span class="text-sm font-semibold text-secondary tracking-wide">IMPORT</span>
+                    </button>
+                </div>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="handleImport()">
+            </section>
+            
+            <section class="pt-4">
+                <div class="h-px w-full bg-gradient-to-r from-transparent via-red-500/30 to-transparent mb-8"></div>
+                <h2 class="text-xs font-bold tracking-[0.2em] text-red-500 mb-4 uppercase pl-1">Danger Zone</h2>
+                <button onclick="clearAllData()" class="w-full bg-surface-light dark:bg-surface-dark border-2 border-red-500/30 rounded-xl p-5 flex items-center justify-between hover:bg-red-500/10 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500">
+                            <span class="material-icons text-xl">warning</span>
+                        </div>
+                        <div class="text-left">
+                            <span class="block text-sm font-bold text-red-500">Clear All Data</span>
+                            <span class="block text-xs text-gray-500 dark:text-gray-400">Cannot be undone</span>
+                        </div>
+                    </div>
+                    <span class="material-icons text-red-500 text-xl">delete_forever</span>
+                </button>
+            </section>
+        </main>
+    </div>
+</div>
+
+<!-- ADD DAY MODAL -->
+<div id="addDayModal" class="modal fixed inset-0 bg-black/60 backdrop-blur-sm z-50 items-center justify-center">
+    <div class="w-full max-w-sm mx-4 bg-surface-light dark:bg-surface-dark border-2 border-primary/30 shadow-2xl rounded-2xl overflow-hidden p-8 relative">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-secondary to-primary"></div>
+        
+        <div class="flex flex-col items-center">
+            <div class="mb-6 h-16 w-16 rounded-2xl bg-gradient-primary flex items-center justify-center text-white shadow-glow">
+                <span class="material-icons text-3xl">fitness_center</span>
+            </div>
+            
+            <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-3 text-center">Add New Day</h2>
+            <p class="text-gray-500 dark:text-gray-400 text-sm text-center mb-8">Create a new workout day</p>
+            
+            <input type="text" id="newDayName" placeholder="e.g. Chest & Triceps" class="block w-full bg-gray-100 dark:bg-card-dark border-2 border-gray-300 dark:border-gray-600 focus:border-primary px-4 py-3 text-lg text-center text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 transition-colors rounded-xl font-semibold mb-8">
+            
+            <div class="w-full flex flex-col gap-3">
+                <button onclick="addDay()" class="w-full bg-gradient-primary text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-glow active:scale-[0.98] transition-all duration-200 text-base tracking-wide uppercase flex items-center justify-center gap-2">
+                    <span>Create Day</span>
+                    <span class="material-icons text-lg">arrow_forward</span>
+                </button>
+                <button onclick="closeModal('addDayModal')" class="w-full py-3 text-gray-500 dark:text-gray-400 hover:text-primary transition-colors duration-200 text-sm font-semibold tracking-wide">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EXERCISE MODAL -->
+<div id="exerciseModal" class="modal fixed inset-0 bg-black/60 backdrop-blur-sm z-50 items-end sm:items-center justify-center">
+    <div class="w-full max-w-md bg-surface-light dark:bg-surface-dark rounded-t-2xl sm:rounded-2xl shadow-2xl border-2 border-primary/30 flex flex-col max-h-[90vh]">
+        <div class="w-full flex justify-center pt-3 pb-1 sm:hidden">
+            <div class="w-12 h-1.5 bg-gray-400 rounded-full opacity-50"></div>
+        </div>
+        
+        <div class="px-6 pt-4 pb-2 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-xl font-bold tracking-tight text-gray-900 dark:text-white" id="exerciseModalTitle">Add Exercise</h2>
+            <button onclick="closeModal('exerciseModal')" class="text-primary hover:text-primary-light transition-colors">
+                <span class="material-icons text-2xl">close</span>
+            </button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            <div class="space-y-2">
+                <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Exercise Name</label>
+                <input type="text" id="exerciseName" placeholder="e.g. Bench Press" class="w-full bg-gray-100 dark:bg-card-dark border-2 border-gray-300 dark:border-gray-600 focus:border-primary rounded-xl px-4 py-3 text-base font-semibold text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-0 transition-all">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Weight (kg)</label>
+                    <input type="number" id="exerciseWeight" step="0.5" class="w-full bg-gray-100 dark:bg-card-dark border-2 border-gray-300 dark:border-gray-600 focus:border-primary rounded-xl px-4 py-4 text-2xl font-bold text-gray-900 dark:text-white text-center focus:outline-none focus:ring-0 transition-all">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Sets</label>
+                    <input type="number" id="exerciseSets" min="1" value="3" class="w-full bg-gray-100 dark:bg-card-dark border-2 border-gray-300 dark:border-gray-600 focus:border-primary rounded-xl px-4 py-4 text-2xl font-bold text-gray-900 dark:text-white text-center focus:outline-none focus:ring-0 transition-all">
+                </div>
+            </div>
+            
+            <div class="space-y-2">
+                <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Rep Range</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="number" id="exerciseRepMin" min="1" value="8" placeholder="Min" class="w-full bg-gray-100 dark:bg-card-dark border-2 border-gray-300 dark:border-gray-600 focus:border-primary rounded-xl px-4 py-4 text-2xl font-bold text-gray-900 dark:text-white text-center focus:outline-none focus:ring-0 transition-all">
+                    <input type="number" id="exerciseRepMax" min="1" value="12" placeholder="Max" class="w-full bg-gray-100 dark:bg-card-dark border-2 border-gray-300 dark:border-gray-600 focus:border-primary rounded-xl px-4 py-4 text-2xl font-bold text-gray-900 dark:text-white text-center focus:outline-none focus:ring-0 transition-all">
+                </div>
+            </div>
+            
+            <div class="h-px w-full bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent"></div>
+            
+            <div class="bg-orange-500/10 rounded-xl p-4 border-2 border-orange-500/30">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="material-icons text-orange-500 text-xl">local_fire_department</span>
+                        <span class="text-sm font-bold text-gray-900 dark:text-white">Warm-up Sets</span>
+                    </div>
+                    <input type="checkbox" id="warmupEnabled" onchange="toggleWarmupInputs()" class="w-12 h-6 cursor-pointer accent-primary rounded-full">
+                </div>
+                
+                <div id="warmupInputs" class="grid grid-cols-2 gap-4 hidden">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase">Warm-up Sets</label>
+                        <input type="number" id="warmupSets" min="1" max="5" value="2" class="w-full bg-orange-500/10 border-2 border-orange-500/30 rounded-lg px-3 py-2 text-lg font-bold text-gray-900 dark:text-white text-center focus:border-orange-500 focus:ring-0">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase">Weight %</label>
+                        <input type="number" id="warmupPercentage" min="10" max="90" step="5" value="50" class="w-full bg-orange-500/10 border-2 border-orange-500/30 rounded-lg px-3 py-2 text-lg font-bold text-gray-900 dark:text-white text-center focus:border-orange-500 focus:ring-0">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="px-6 py-5 bg-gray-50 dark:bg-card-dark border-t border-gray-200 dark:border-gray-700 flex items-center justify-between rounded-b-2xl">
+            <button onclick="deleteExercise()" id="deleteExerciseBtn" class="flex items-center justify-center w-12 h-12 rounded-full hover:bg-red-500/10 text-gray-400 hover:text-red-500 transition-colors" style="display: none;">
+                <span class="material-icons">delete_outline</span>
+            </button>
+            <div class="flex items-center space-x-3 ml-auto">
+                <button onclick="closeModal('exerciseModal')" class="px-6 py-3 text-sm font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Cancel</button>
+                <button onclick="saveExercise()" class="bg-gradient-primary hover:shadow-glow text-white font-bold py-3 px-8 rounded-xl shadow-lg active:scale-95 transition-all flex items-center space-x-2">
+                    <span id="saveExerciseBtn">Save</span>
+                    <span class="material-icons text-sm">check</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ===== PWA INSTALLATION =====
+let deferredPrompt;
+const installPrompt = document.getElementById('installPrompt');
+
+// Create manifest dynamically
+const manifestData = {
+    "name": "Gym Tracker Pro",
+    "short_name": "Gym Tracker",
+    "description": "Track your gym workouts with progressive overload",
+    "start_url": "./",
+    "display": "standalone",
+    "background_color": "#0f172a",
+    "theme_color": "#0ea5e9",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%230ea5e9'/%3E%3Cpath d='M256 120c-13.3 0-24 10.7-24 24v32h-32c-13.3 0-24 10.7-24 24s10.7 24 24 24h32v64h-32c-13.3 0-24 10.7-24 24s10.7 24 24 24h32v32c0 13.3 10.7 24 24 24s24-10.7 24-24v-32h32c13.3 0 24-10.7 24-24s-10.7-24-24-24h-32v-64h32c13.3 0 24-10.7 24-24s-10.7-24-24-24h-32v-32c0-13.3-10.7-24-24-24z' fill='white'/%3E%3C/svg%3E",
+            "sizes": "512x512",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ]
+};
+
+const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/json' });
+const manifestURL = URL.createObjectURL(manifestBlob);
+document.getElementById('manifestPlaceholder').setAttribute('href', manifestURL);
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    setTimeout(() => {
+        installPrompt.classList.remove('hidden');
+    }, 2000);
+});
+
+function installApp() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                console.log('App installed');
+            }
+            deferredPrompt = null;
+            installPrompt.classList.add('hidden');
+        });
+    }
+}
+
+function dismissInstall() {
+    installPrompt.classList.add('hidden');
+    localStorage.setItem('installDismissed', 'true');
+}
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+    const swCode = `
+        const CACHE_NAME = 'gym-tracker-v1';
+        
+        self.addEventListener('install', (event) => {
+            self.skipWaiting();
+        });
+        
+        self.addEventListener('activate', (event) => {
+            event.waitUntil(clients.claim());
+        });
+        
+        self.addEventListener('fetch', (event) => {
+            event.respondWith(
+                caches.match(event.request).then((response) => {
+                    return response || fetch(event.request);
+                })
+            );
+        });
+    `;
+    
+    const blob = new Blob([swCode], { type: 'application/javascript' });
+    const swURL = URL.createObjectURL(blob);
+    
+    navigator.serviceWorker.register(swURL).then(() => {
+        console.log('Service Worker registered');
+    }).catch((error) => {
+        console.log('Service Worker registration failed:', error);
+    });
+}
+
+// ===== STORAGE =====
+const DEFAULT_SPLIT = {
+    days: [
+        {
+            id: 'push', name: 'Push Day',
+            exercises: [
+                { id: 'ex1', name: 'Bench Press', weight: 60, sets: 3, repMin: 8, repMax: 12, warmupEnabled: false, warmupSets: 2, warmupPercentage: 50, history: [] },
+                { id: 'ex2', name: 'Overhead Press', weight: 40, sets: 3, repMin: 8, repMax: 12, warmupEnabled: false, warmupSets: 2, warmupPercentage: 50, history: [] }
+            ]
+        },
+        {
+            id: 'pull', name: 'Pull Day',
+            exercises: [
+                { id: 'ex6', name: 'Deadlift', weight: 100, sets: 3, repMin: 5, repMax: 8, warmupEnabled: true, warmupSets: 2, warmupPercentage: 50, history: [] },
+                { id: 'ex7', name: 'Barbell Row', weight: 60, sets: 3, repMin: 8, repMax: 12, warmupEnabled: false, warmupSets: 2, warmupPercentage: 50, history: [] }
+            ]
+        },
+        {
+            id: 'legs', name: 'Legs Day',
+            exercises: [
+                { id: 'ex11', name: 'Squat', weight: 80, sets: 3, repMin: 6, repMax: 10, warmupEnabled: true, warmupSets: 2, warmupPercentage: 50, history: [] },
+                { id: 'ex12', name: 'Leg Press', weight: 120, sets: 3, repMin: 10, repMax: 15, warmupEnabled: false, warmupSets: 2, warmupPercentage: 50, history: [] }
+            ]
+        }
+    ],
+    settings: { restTime: 120, theme: 'dark' },
+    stats: { totalWorkouts: 0, lastWorkoutDate: null }
+};
+
+const Storage = {
+    init() { if (!this.getData()) this.saveData(DEFAULT_SPLIT); },
+    getData() {
+        try { return JSON.parse(localStorage.getItem('gymTrackerProData')); }
+        catch (e) { return null; }
+    },
+    saveData(data) {
+        try { localStorage.setItem('gymTrackerProData', JSON.stringify(data)); return true; }
+        catch (e) { return false; }
+    },
+    getDay(dayId) { return this.getData().days.find(d => d.id === dayId); },
+    getExercise(dayId, exerciseId) {
+        const day = this.getDay(dayId);
+        return day ? day.exercises.find(e => e.id === exerciseId) : null;
+    },
+    addDay(dayName) {
+        const data = this.getData();
+        const newDay = { id: 'day_' + Date.now(), name: dayName, exercises: [] };
+        data.days.push(newDay);
+        this.saveData(data);
+        return newDay;
+    },
+    deleteDay(dayId) {
+        const data = this.getData();
+        data.days = data.days.filter(d => d.id !== dayId);
+        this.saveData(data);
+    },
+    moveDayUp(dayId) {
+        const data = this.getData();
+        const index = data.days.findIndex(d => d.id === dayId);
+        if (index > 0) {
+            [data.days[index], data.days[index - 1]] = [data.days[index - 1], data.days[index]];
+            this.saveData(data);
+        }
+    },
+    moveDayDown(dayId) {
+        const data = this.getData();
+        const index = data.days.findIndex(d => d.id === dayId);
+        if (index < data.days.length - 1) {
+            [data.days[index], data.days[index + 1]] = [data.days[index + 1], data.days[index]];
+            this.saveData(data);
+        }
+    },
+    updateDayName(dayId, newName) {
+        const data = this.getData();
+        const day = data.days.find(d => d.id === dayId);
+        if (day) { day.name = newName; this.saveData(data); }
+    },
+    addExercise(dayId, exerciseData) {
+        const data = this.getData();
+        const day = data.days.find(d => d.id === dayId);
+        if (day) {
+            const newExercise = {
+                id: 'ex_' + Date.now(),
+                name: exerciseData.name,
+                weight: parseFloat(exerciseData.weight),
+                sets: parseInt(exerciseData.sets),
+                repMin: parseInt(exerciseData.repMin),
+                repMax: parseInt(exerciseData.repMax),
+                warmupEnabled: exerciseData.warmupEnabled || false,
+                warmupSets: parseInt(exerciseData.warmupSets) || 2,
+                warmupPercentage: parseInt(exerciseData.warmupPercentage) || 50,
+                history: []
+            };
+            day.exercises.push(newExercise);
+            this.saveData(data);
+            return newExercise;
+        }
+        return null;
+    },
+    updateExercise(dayId, exerciseId, exerciseData) {
+        const data = this.getData();
+        const day = data.days.find(d => d.id === dayId);
+        if (day) {
+            const exercise = day.exercises.find(e => e.id === exerciseId);
+            if (exercise) {
+                exercise.name = exerciseData.name;
+                exercise.weight = parseFloat(exerciseData.weight);
+                exercise.sets = parseInt(exerciseData.sets);
+                exercise.repMin = parseInt(exerciseData.repMin);
+                exercise.repMax = parseInt(exerciseData.repMax);
+                exercise.warmupEnabled = exerciseData.warmupEnabled || false;
+                exercise.warmupSets = parseInt(exerciseData.warmupSets) || 2;
+                exercise.warmupPercentage = parseInt(exerciseData.warmupPercentage) || 50;
+                this.saveData(data);
+            }
+        }
+    },
+    deleteExercise(dayId, exerciseId) {
+        const data = this.getData();
+        const day = data.days.find(d => d.id === dayId);
+        if (day) {
+            day.exercises = day.exercises.filter(e => e.id !== exerciseId);
+            this.saveData(data);
+        }
+    },
+    moveExerciseUp(dayId, exerciseId) {
+        const data = this.getData();
+        const day = data.days.find(d => d.id === dayId);
+        if (day) {
+            const index = day.exercises.findIndex(e => e.id === exerciseId);
+            if (index > 0) {
+                [day.exercises[index], day.exercises[index - 1]] = [day.exercises[index - 1], day.exercises[index]];
+                this.saveData(data);
+            }
+        }
+    },
+    moveExerciseDown(dayId, exerciseId) {
+        const data = this.getData();
+        const day = data.days.find(d => d.id === dayId);
+        if (day) {
+            const index = day.exercises.findIndex(e => e.id === exerciseId);
+            if (index < day.exercises.length - 1) {
+                [day.exercises[index], day.exercises[index + 1]] = [day.exercises[index + 1], day.exercises[index]];
+                this.saveData(data);
+            }
+        }
+    },
+    saveWorkout(dayId, exerciseId, setsData) {
+        const data = this.getData();
+        const exercise = this.getExercise(dayId, exerciseId);
+        
+        if (exercise) {
+            const workout = {
+                date: new Date().toISOString(),
+                weight: exercise.weight,
+                sets: setsData.filter(s => !s.isWarmup).map(s => s.reps),
+                warmupSets: setsData.filter(s => s.isWarmup).map(s => s.reps),
+                increased: false
+            };
+
+            const workingSets = setsData.filter(s => !s.isWarmup);
+            const allSetsMaxReps = workingSets.every(s => s.reps >= exercise.repMax);
+            
+            if (allSetsMaxReps) {
+                exercise.weight += 2.5;
+                workout.increased = true;
+            }
+
+            exercise.history.push(workout);
+            data.stats.totalWorkouts++;
+            data.stats.lastWorkoutDate = new Date().toISOString();
+
+            this.saveData(data);
+            return workout;
+        }
+        return null;
+    },
+    getLastWorkout(dayId, exerciseId) {
+        const exercise = this.getExercise(dayId, exerciseId);
+        if (exercise && exercise.history.length > 0) {
+            return exercise.history[exercise.history.length - 1];
+        }
+        return null;
+    },
+    getSettings() { return this.getData().settings; },
+    updateSettings(settings) {
+        const data = this.getData();
+        data.settings = { ...data.settings, ...settings };
+        this.saveData(data);
+    },
+    getStats() {
+        const data = this.getData();
+        let streak = 0;
+        if (data.stats.lastWorkoutDate) {
+            const lastDate = new Date(data.stats.lastWorkoutDate);
+            const today = new Date();
+            const diffDays = Math.floor(Math.abs(today - lastDate) / (1000 * 60 * 60 * 24));
+            if (diffDays <= 1) streak = this.calculateStreak(data);
+        }
+        return { totalWorkouts: data.stats.totalWorkouts, currentStreak: streak };
+    },
+    calculateStreak(data) {
+        let streak = 0;
+        const allWorkouts = [];
+        data.days.forEach(day => {
+            day.exercises.forEach(exercise => {
+                exercise.history.forEach(workout => {
+                    allWorkouts.push(new Date(workout.date));
+                });
+            });
+        });
+        allWorkouts.sort((a, b) => b - a);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        let checkDate = new Date(today);
+        for (let workout of allWorkouts) {
+            const workoutDate = new Date(workout);
+            workoutDate.setHours(0, 0, 0, 0);
+            const diffDays = Math.floor((checkDate - workoutDate) / (1000 * 60 * 60 * 24));
+            if (diffDays === 0 || diffDays === 1) {
+                if (diffDays === 1) {
+                    streak++;
+                    checkDate = new Date(workoutDate);
+                }
+            } else break;
+        }
+        return streak;
+    },
+    exportData() {
+        const data = this.getData();
+        const dataStr = JSON.stringify(data, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `gym-tracker-backup-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    },
+    importData(jsonData) {
+        try {
+            const data = JSON.parse(jsonData);
+            if (data.days && Array.isArray(data.days)) {
+                this.saveData(data);
+                return true;
+            }
+            return false;
+        } catch (e) { return false; }
+    },
+    clearAll() {
+        if (confirm('Are you sure you want to delete all data? This cannot be undone!')) {
+            localStorage.removeItem('gymTrackerProData');
+            this.init();
+            return true;
+        }
+        return false;
+    }
+};
+
+// ===== APP LOGIC =====
+let currentDayId = null;
+let currentExerciseId = null;
+let currentSetNumber = 0;
+let totalSets = 0;
+let completedSetsData = [];
+let timerInterval = null;
+let timerSeconds = 0;
+let timerPaused = false;
+let workoutResults = [];
+let editingExerciseId = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    Storage.init();
+    loadTheme();
+    renderHome();
+    
+    if (!localStorage.getItem('installDismissed') && !window.matchMedia('(display-mode: standalone)').matches) {
+        setTimeout(() => {
+            if (!deferredPrompt) {
+                installPrompt.classList.remove('hidden');
+            }
+        }, 5000);
+    }
+});
+
+function loadTheme() {
+    const settings = Storage.getSettings();
+    document.documentElement.classList.toggle('dark', settings.theme === 'dark');
+    updateThemeIcon();
+}
+
+function toggleTheme() {
+    const settings = Storage.getSettings();
+    const newTheme = settings.theme === 'dark' ? 'light' : 'dark';
+    Storage.updateSettings({ theme: newTheme });
+    document.documentElement.classList.toggle('dark');
+    updateThemeIcon();
+}
+
+function updateThemeIcon() {
+    const settings = Storage.getSettings();
+    document.getElementById('themeIcon').textContent = settings.theme === 'dark' ? 'light_mode' : 'dark_mode';
+}
+
+function showHome() {
+    hideAllScreens();
+    document.getElementById('homeScreen').classList.add('active');
+    renderHome();
+}
+
+function showExercises(dayId) {
+    currentDayId = dayId;
+    hideAllScreens();
+    document.getElementById('exercisesScreen').classList.add('active');
+    renderExercises();
+}
+
+function showWorkout(dayId, exerciseId) {
+    currentDayId = dayId;
+    currentExerciseId = exerciseId;
+    const exercise = Storage.getExercise(dayId, exerciseId);
+    
+    currentSetNumber = 1;
+    totalSets = (exercise.warmupEnabled ? exercise.warmupSets : 0) + exercise.sets;
+    completedSetsData = [];
+    
+    hideAllScreens();
+    document.getElementById('workoutScreen').classList.add('active');
+    renderWorkout();
+}
+
+function showSummary() {
+    hideAllScreens();
+    document.getElementById('summaryScreen').classList.add('active');
+    renderSummary();
+}
+
+function showSettings() {
+    hideAllScreens();
+    document.getElementById('settingsScreen').classList.add('active');
+    loadSettings();
+}
+
+function hideAllScreens() {
+    document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.remove('active');
+    });
+}
+
+function renderHome() {
+    const data = Storage.getData();
+    const daysList = document.getElementById('daysList');
+    
+    daysList.innerHTML = data.days.map((day, index) => `
+        <div class="group relative bg-surface-light dark:bg-surface-dark rounded-xl shadow-lg hover:shadow-glow border border-gray-200 dark:border-gray-700 transition-all duration-300">
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-secondary rounded-l-xl"></div>
+            <div class="p-4 pl-5" onclick="showExercises('${day.id}')">
+                <div class="flex justify-between items-center mb-3">
+                    <div>
+                        <h3 class="text-lg text-gray-900 dark:text-white font-bold tracking-wide">${day.name}</h3>
+                        <p class="text-xs text-primary mt-1 font-semibold">${day.exercises.length} Exercises</p>
+                    </div>
+                    <span class="material-icons text-gray-400">chevron_right</span>
+                </div>
+                <div class="flex items-center space-x-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <button onclick="event.stopPropagation(); moveDayUp('${day.id}')" ${index === 0 ? 'disabled' : ''} class="flex-1 px-3 py-2 rounded-lg hover:bg-primary/10 text-primary text-sm font-semibold transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                        ↑ Up
+                    </button>
+                    <button onclick="event.stopPropagation(); moveDayDown('${day.id}')" ${index === data.days.length - 1 ? 'disabled' : ''} class="flex-1 px-3 py-2 rounded-lg hover:bg-primary/10 text-primary text-sm font-semibold transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                        ↓ Down
+                    </button>
+                    <button onclick="event.stopPropagation(); deleteDay('${day.id}')" class="p-2 rounded-lg hover:bg-red-500/10 text-red-500 transition-colors">
+                        <span class="material-icons text-xl">delete</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    const stats = Storage.getStats();
+    document.getElementById('totalWorkouts').textContent = stats.totalWorkouts;
+    document.getElementById('currentStreak').textContent = stats.currentStreak;
+}
+
+function renderExercises() {
+    const day = Storage.getDay(currentDayId);
+    const exercisesList = document.getElementById('exercisesList');
+    
+    document.getElementById('currentDayName').textContent = day.name;
+    
+    exercisesList.innerHTML = day.exercises.map((exercise, index) => {
+        const lastWorkout = Storage.getLastWorkout(currentDayId, exercise.id);
+        let badges = '';
+        
+        if (exercise.warmupEnabled) {
+            badges += '<span class="px-2 py-1 bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded-lg text-xs font-bold uppercase">Warm-up</span>';
+        }
+        
+        if (lastWorkout && lastWorkout.increased) {
+            badges += '<span class="px-2 py-1 bg-success/20 text-success rounded-lg text-xs font-bold uppercase ml-2">+2.5kg</span>';
+        }
+        
+        return `
+            <div class="group relative bg-surface-light dark:bg-surface-dark rounded-xl shadow-md hover:shadow-glow border border-gray-200 dark:border-gray-700 transition-all">
+                <div class="p-4" onclick="showWorkout('${currentDayId}', '${exercise.id}')">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex-1">
+                            <h3 class="text-lg text-gray-900 dark:text-white font-bold mb-2">${exercise.name}</h3>
+                            <div class="flex items-center gap-2 mb-2">
+                                ${badges}
+                            </div>
+                            <div class="flex items-center gap-6">
+                                <div>
+                                    <span class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Weight</span>
+                                    <span class="text-xl text-primary font-bold">${exercise.weight} <span class="text-sm text-gray-400">kg</span></span>
+                                </div>
+                                <div>
+                                    <span class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Sets × Reps</span>
+                                    <span class="text-xl text-secondary font-bold">${exercise.sets} × ${exercise.repMin}-${exercise.repMax}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+                        <button onclick="event.stopPropagation(); moveExerciseUp('${exercise.id}')" ${index === 0 ? 'disabled' : ''} class="flex-1 px-2 py-2 rounded-lg hover:bg-primary/10 text-primary text-xs font-semibold transition-colors disabled:opacity-30">
+                            ↑ Up
+                        </button>
+                        <button onclick="event.stopPropagation(); moveExerciseDown('${exercise.id}')" ${index === day.exercises.length - 1 ? 'disabled' : ''} class="flex-1 px-2 py-2 rounded-lg hover:bg-primary/10 text-primary text-xs font-semibold transition-colors disabled:opacity-30">
+                            ↓ Down
+                        </button>
+                        <button onclick="event.stopPropagation(); editExercise('${exercise.id}')" class="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors">
+                            <span class="material-icons text-lg">edit</span>
+                        </button>
+                        <button onclick="event.stopPropagation(); confirmDeleteExercise('${exercise.id}')" class="p-2 rounded-lg hover:bg-red-500/10 text-red-500 transition-colors">
+                            <span class="material-icons text-lg">delete</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderWorkout() {
+    const exercise = Storage.getExercise(currentDayId, currentExerciseId);
+    const isWarmup = exercise.warmupEnabled && currentSetNumber <= exercise.warmupSets;
+    
+    document.getElementById('warmupIndicator').style.display = isWarmup ? 'block' : 'none';
+    
+    let targetWeight = exercise.weight;
+    if (isWarmup) {
+        targetWeight = Math.round((exercise.weight * exercise.warmupPercentage / 100) * 2) / 2;
+    }
+    
+    document.getElementById('workoutExerciseName').textContent = exercise.name;
+    document.getElementById('setCounter').textContent = `Set ${currentSetNumber} of ${totalSets}`;
+    document.getElementById('targetWeight').textContent = targetWeight;
+    document.getElementById('targetReps').textContent = `× ${exercise.repMin}-${exercise.repMax}`;
+    
+    const lastWorkout = Storage.getLastWorkout(currentDayId, currentExerciseId);
+    const lastPerfDiv = document.getElementById('lastPerformance');
+    
+    if (lastWorkout && !isWarmup) {
+        lastPerfDiv.innerHTML = `
+            <span class="material-icons text-xs">history</span>
+            Last: ${lastWorkout.weight} kg × ${lastWorkout.sets.join(', ')}
+        `;
+        lastPerfDiv.style.display = 'flex';
+        lastPerfDiv.classList.add('items-center', 'gap-1');
+    } else {
+        lastPerfDiv.style.display = 'none';
+    }
+    
+    document.getElementById('repsInput').value = '';
+    document.getElementById('repsInput').focus();
+    renderCompletedSets();
+}
+
+function renderCompletedSets() {
+    const completedSetsDiv = document.getElementById('completedSets');
+    
+    if (completedSetsData.length > 0) {
+        let html = '<h3 class="text-xs uppercase tracking-widest text-gray-500 dark:text-gray-400 pl-4 mb-2 font-bold">Completed Sets</h3>';
+        
+        completedSetsData.forEach((set, index) => {
+            const warmupClass = set.isWarmup ? 'border-l-4 border-orange-500' : 'border-l-4 border-primary';
+            html += `
+                <div class="flex items-center justify-between p-4 bg-surface-light dark:bg-surface-dark rounded-lg border border-gray-200 dark:border-gray-700 ${warmupClass}">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                            ${index + 1}
+                        </div>
+                        <div>
+                            <div class="text-base text-gray-900 dark:text-white font-semibold">${set.weight} kg</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-lg text-gray-900 dark:text-white font-bold">${set.reps} <span class="text-sm text-gray-500">reps</span></div>
+                        <span class="material-icons text-success text-xl">check_circle</span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        completedSetsDiv.innerHTML = html;
+        completedSetsDiv.style.display = 'block';
+    } else {
+        completedSetsDiv.style.display = 'none';
+    }
+}
+
+function completeSet() {
+    const repsInput = document.getElementById('repsInput');
+    const reps = parseInt(repsInput.value);
+    
+    if (!reps || reps < 0) {
+        alert('Please enter valid reps');
+        return;
+    }
+    
+    const exercise = Storage.getExercise(currentDayId, currentExerciseId);
+    const isWarmup = exercise.warmupEnabled && currentSetNumber <= exercise.warmupSets;
+    
+    let weight = exercise.weight;
+    if (isWarmup) {
+        weight = Math.round((exercise.weight * exercise.warmupPercentage / 100) * 2) / 2;
+    }
+    
+    completedSetsData.push({ reps, weight, isWarmup });
+    
+    if (currentSetNumber >= totalSets) {
+        const workout = Storage.saveWorkout(currentDayId, currentExerciseId, completedSetsData);
+        
+        workoutResults.push({
+            exerciseName: exercise.name,
+            weight: exercise.weight - (workout.increased ? 2.5 : 0),
+            sets: completedSetsData.filter(s => !s.isWarmup).map(s => s.reps),
+            increased: workout.increased
+        });
+        
+        const day = Storage.getDay(currentDayId);
+        const currentIndex = day.exercises.findIndex(e => e.id === currentExerciseId);
+        
+        if (currentIndex < day.exercises.length - 1) {
+            if (confirm('Exercise complete! Continue to next exercise?')) {
+                const nextExercise = day.exercises[currentIndex + 1];
+                showWorkout(currentDayId, nextExercise.id);
+            } else {
+                showSummary();
+            }
+        } else {
+            showSummary();
+        }
+    } else {
+        currentSetNumber++;
+        startRestTimer();
+        renderWorkout();
+    }
+}
+
+function startRestTimer() {
+    const settings = Storage.getSettings();
+    timerSeconds = settings.restTime;
+    timerPaused = false;
+    
+    const timerCard = document.getElementById('timerCard');
+    const progressBar = document.getElementById('timerProgressBar');
+    
+    timerCard.style.display = 'flex';
+    updateTimerDisplay();
+    
+    if (timerInterval) clearInterval(timerInterval);
+    
+    const circumference = 283;
+    
+    timerInterval = setInterval(() => {
+        if (!timerPaused) {
+            timerSeconds--;
+            updateTimerDisplay();
+            
+            const progress = (timerSeconds / settings.restTime);
+            const offset = circumference * (1 - progress);
+            progressBar.style.strokeDashoffset = offset;
+            
+            if (timerSeconds <= 0) {
+                clearInterval(timerInterval);
+                timerCard.style.display = 'none';
+                
+                if (confirm('Rest time complete! Ready for next set?')) {
+                    document.getElementById('repsInput').focus();
+                }
+            }
+        }
+    }, 1000);
+}
+
+function updateTimerDisplay() {
+    const minutes = Math.floor(timerSeconds / 60);
+    const seconds = timerSeconds % 60;
+    const display = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    document.getElementById('timerDisplay').textContent = display;
+}
+
+function exitWorkout() {
+    if (timerInterval) clearInterval(timerInterval);
+    if (confirm('Exit workout? Progress will be lost.')) {
+        workoutResults = [];
+        showExercises(currentDayId);
+    }
+}
+
+function renderSummary() {
+    const summaryList = document.getElementById('summaryList');
+    let totalVolume = 0;
+    
+    summaryList.innerHTML = workoutResults.map(result => {
+        const volume = result.weight * result.sets.reduce((a, b) => a + b, 0);
+        totalVolume += volume;
+        
+        const badge = result.increased
+            ? '<span class="px-3 py-1 bg-success/20 text-success rounded-lg text-xs font-bold uppercase flex items-center gap-1"><span class="material-icons text-sm">emoji_events</span> New PR +2.5kg</span>'
+            : '<span class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-xs font-bold uppercase">Maintained</span>';
+        
+        return `
+            <div class="bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl p-5 flex items-center justify-between shadow-md">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center text-white">
+                        <span class="material-icons text-2xl">fitness_center</span>
+                    </div>
+                    <div>
+                        <h4 class="text-gray-900 dark:text-white font-bold text-base leading-tight">${result.exerciseName}</h4>
+                        <p class="text-gray-500 dark:text-gray-400 text-xs mt-1">${result.sets.length} Sets • ${result.weight}kg</p>
+                    </div>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                    ${badge}
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    document.getElementById('totalVolume').textContent = totalVolume.toFixed(1);
+    workoutResults = [];
+}
+
+function showAddDayModal() {
+    document.getElementById('addDayModal').classList.add('active');
+    document.getElementById('newDayName').focus();
+}
+
+function addDay() {
+    const dayName = document.getElementById('newDayName').value.trim();
+    if (!dayName) { alert('Please enter a day name'); return; }
+    Storage.addDay(dayName);
+    closeModal('addDayModal');
+    renderHome();
+}
+
+function deleteDay(dayId) {
+    if (confirm('Delete this day and all its exercises?')) {
+        Storage.deleteDay(dayId);
+        renderHome();
+    }
+}
+
+function moveDayUp(dayId) {
+    Storage.moveDayUp(dayId);
+    renderHome();
+}
+
+function moveDayDown(dayId) {
+    Storage.moveDayDown(dayId);
+    renderHome();
+}
+
+function editDayName() {
+    const newName = prompt('Enter new day name:');
+    if (newName && newName.trim()) {
+        Storage.updateDayName(currentDayId, newName.trim());
+        renderExercises();
+    }
+}
+
+function showAddExerciseModal() {
+    editingExerciseId = null;
+    document.getElementById('exerciseModalTitle').textContent = 'Add Exercise';
+    document.getElementById('exerciseName').value = '';
+    document.getElementById('exerciseWeight').value = '';
+    document.getElementById('exerciseSets').value = '3';
+    document.getElementById('exerciseRepMin').value = '8';
+    document.getElementById('exerciseRepMax').value = '12';
+    document.getElementById('warmupEnabled').checked = false;
+    document.getElementById('warmupInputs').classList.add('hidden');
+    document.getElementById('deleteExerciseBtn').style.display = 'none';
+    document.getElementById('saveExerciseBtn').textContent = 'Save';
+    document.getElementById('exerciseModal').classList.add('active');
+}
+
+function editExercise(exerciseId) {
+    editingExerciseId = exerciseId;
+    const exercise = Storage.getExercise(currentDayId, exerciseId);
+    
+    document.getElementById('exerciseModalTitle').textContent = 'Edit Exercise';
+    document.getElementById('exerciseName').value = exercise.name;
+    document.getElementById('exerciseWeight').value = exercise.weight;
+    document.getElementById('exerciseSets').value = exercise.sets;
+    document.getElementById('exerciseRepMin').value = exercise.repMin;
+    document.getElementById('exerciseRepMax').value = exercise.repMax;
+    document.getElementById('warmupEnabled').checked = exercise.warmupEnabled;
+    document.getElementById('warmupSets').value = exercise.warmupSets || 2;
+    document.getElementById('warmupPercentage').value = exercise.warmupPercentage || 50;
+    
+    if (exercise.warmupEnabled) {
+        document.getElementById('warmupInputs').classList.remove('hidden');
+    }
+    
+    document.getElementById('deleteExerciseBtn').style.display = 'flex';
+    document.getElementById('saveExerciseBtn').textContent = 'Save';
+    document.getElementById('exerciseModal').classList.add('active');
+}
+
+function saveExercise() {
+    const name = document.getElementById('exerciseName').value.trim();
+    const weight = document.getElementById('exerciseWeight').value;
+    const sets = document.getElementById('exerciseSets').value;
+    const repMin = document.getElementById('exerciseRepMin').value;
+    const repMax = document.getElementById('exerciseRepMax').value;
+    const warmupEnabled = document.getElementById('warmupEnabled').checked;
+    const warmupSets = document.getElementById('warmupSets').value;
+    const warmupPercentage = document.getElementById('warmupPercentage').value;
+    
+    if (!name || !weight || !sets || !repMin || !repMax) {
+        alert('Please fill all required fields');
+        return;
+    }
+    
+    if (parseInt(repMin) >= parseInt(repMax)) {
+        alert('Min reps must be less than max reps');
+        return;
+    }
+    
+    const exerciseData = { name, weight, sets, repMin, repMax, warmupEnabled, warmupSets, warmupPercentage };
+    
+    if (editingExerciseId) {
+        Storage.updateExercise(currentDayId, editingExerciseId, exerciseData);
+    } else {
+        Storage.addExercise(currentDayId, exerciseData);
+    }
+    
+    closeModal('exerciseModal');
+    renderExercises();
+}
+
+function deleteExercise() {
+    if (confirm('Delete this exercise?')) {
+        Storage.deleteExercise(currentDayId, editingExerciseId);
+        closeModal('exerciseModal');
+        renderExercises();
+    }
+}
+
+function confirmDeleteExercise(exerciseId) {
+    if (confirm('Delete this exercise?')) {
+        Storage.deleteExercise(currentDayId, exerciseId);
+        renderExercises();
+    }
+}
+
+function moveExerciseUp(exerciseId) {
+    Storage.moveExerciseUp(currentDayId, exerciseId);
+    renderExercises();
+}
+
+function moveExerciseDown(exerciseId) {
+    Storage.moveExerciseDown(currentDayId, exerciseId);
+    renderExercises();
+}
+
+function toggleWarmupInputs() {
+    const enabled = document.getElementById('warmupEnabled').checked;
+    const inputs = document.getElementById('warmupInputs');
+    if (enabled) {
+        inputs.classList.remove('hidden');
+    } else {
+        inputs.classList.add('hidden');
+    }
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+    if (modalId === 'addDayModal') {
+        document.getElementById('newDayName').value = '';
+    }
+}
+
+function loadSettings() {
+    const settings = Storage.getSettings();
+    document.getElementById('restTimeSelect').value = settings.restTime;
+}
+
+function updateRestTime() {
+    const restTime = parseInt(document.getElementById('restTimeSelect').value);
+    Storage.updateSettings({ restTime });
+}
+
+function exportData() {
+    Storage.exportData();
+    alert('Backup downloaded!');
+}
+
+function importData() {
+    document.getElementById('importFile').click();
+}
+
+function handleImport() {
+    const file = document.getElementById('importFile').files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if (Storage.importData(e.target.result)) {
+                alert('Data imported successfully!');
+                renderHome();
+            } else {
+                alert('Error importing data.');
+            }
+        };
+        reader.readAsText(file);
+    }
+}
+
+function clearAllData() {
+    if (Storage.clearAll()) {
+        alert('All data cleared!');
+        renderHome();
+    }
+}
+
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal')) {
+        e.target.classList.remove('active');
+    }
+});
+</script>
+
+</body>
+</html>
