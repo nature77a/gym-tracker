@@ -8,10 +8,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Gym Tracker">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%230ea5e9'/%3E%3Cpath d='M256 120c-13.3 0-24 10.7-24 24v32h-32c-13.3 0-24 10.7-24 24s10.7 24 24 24h32v64h-32c-13.3 0-24 10.7-24 24s10.7 24 24 24h32v32c0 13.3 10.7 24 24 24s24-10.7 24-24v-32h32c13.3 0 24-10.7 24-24s-10.7-24-24-24h-32v-64h32c13.3 0 24-10.7 24-24s-10.7-24-24-24h-32v-32c0-13.3-10.7-24-24-24z' fill='white'/%3E%3C/svg%3E">
     
     <title>💪 Gym Tracker Pro</title>
     
-    <link rel="manifest" href="#" id="manifestPlaceholder">
+    <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22Gym%20Tracker%20Pro%22%2C%22short_name%22%3A%22Gym%20Tracker%22%2C%22description%22%3A%22Track%20your%20gym%20workouts%20with%20progressive%20overload%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%230ea5e9%22%2C%22orientation%22%3A%22portrait%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20512%20512%27%253E%253Crect%20width%3D%27512%27%20height%3D%27512%27%20rx%3D%27128%27%20fill%3D%27%25230ea5e9%27%2F%253E%253Cpath%20d%3D%27M256%20120c-13.3%200-24%2010.7-24%2024v32h-32c-13.3%200-24%2010.7-24%2024s10.7%2024%2024%2024h32v64h-32c-13.3%200-24%2010.7-24%2024s10.7%2024%2024%2024h32v32c0%2013.3%2010.7%2024%2024%2024s24-10.7%2024-24v-32h32c13.3%200%2024-10.7%2024-24s-10.7-24-24-24h-32v-64h32c13.3%200%2024-10.7%2024-24s-10.7-24-24-24h-32v-32c0-13.3-10.7-24-24-24z%27%20fill%3D%27white%27%2F%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D">
     
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -106,7 +107,7 @@
         </div>
         <div class="flex-1">
             <h3 class="text-sm font-bold text-gray-900 dark:text-white">Install App</h3>
-            <p class="text-xs text-gray-600 dark:text-gray-400">Add to home screen for quick access</p>
+            <p class="text-xs text-gray-600 dark:text-gray-400">Quick access from home screen</p>
         </div>
         <button onclick="installApp()" class="px-4 py-2 bg-gradient-primary text-white rounded-lg text-sm font-semibold hover:shadow-glow transition-all">
             Install
@@ -470,6 +471,14 @@
             
             <div class="h-px w-full bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent"></div>
             
+            <div class="space-y-2">
+                <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Rest Time (seconds)</label>
+                <input type="number" id="exerciseRestTime" min="30" max="600" step="15" value="120" placeholder="120" class="w-full bg-gray-100 dark:bg-card-dark border-2 border-gray-300 dark:border-gray-600 focus:border-primary rounded-xl px-4 py-4 text-2xl font-bold text-gray-900 dark:text-white text-center focus:outline-none focus:ring-0 transition-all">
+                <p class="text-xs text-gray-500 dark:text-gray-400 text-center">Default: 120 sec (2 min)</p>
+            </div>
+            
+            <div class="h-px w-full bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent"></div>
+            
             <div class="bg-orange-500/10 rounded-xl p-4 border-2 border-orange-500/30">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center space-x-2">
@@ -507,91 +516,154 @@
     </div>
 </div>
 
+<!-- RESUME WORKOUT MODAL -->
+<div id="resumeWorkoutModal" class="modal fixed inset-0 bg-black/60 backdrop-blur-sm z-50 items-center justify-center">
+    <div class="w-full max-w-sm mx-4 bg-surface-light dark:bg-surface-dark border-2 border-primary/30 shadow-2xl rounded-2xl overflow-hidden p-8 relative">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-secondary to-primary"></div>
+        
+        <div class="flex flex-col items-center">
+            <div class="mb-6 h-16 w-16 rounded-2xl bg-gradient-primary flex items-center justify-center text-white shadow-glow">
+                <span class="material-icons text-3xl">fitness_center</span>
+            </div>
+            
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-3 text-center">Workout In Progress</h2>
+            <p class="text-gray-500 dark:text-gray-400 text-sm text-center mb-8" id="resumeWorkoutText">You have an unfinished workout</p>
+            
+            <div class="w-full flex flex-col gap-3">
+                <button onclick="resumeWorkout()" class="w-full bg-gradient-primary text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-glow active:scale-[0.98] transition-all duration-200 text-base tracking-wide uppercase">
+                    Resume Workout
+                </button>
+                <button onclick="startNewWorkout()" class="w-full bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold py-4 rounded-xl active:scale-[0.98] transition-all duration-200 text-base">
+                    Start New Workout
+                </button>
+                <button onclick="cancelSavedWorkout()" class="w-full py-3 text-red-500 hover:text-red-600 transition-colors duration-200 text-sm font-semibold">
+                    Cancel & Delete Progress
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // ===== PWA INSTALLATION =====
 let deferredPrompt;
 const installPrompt = document.getElementById('installPrompt');
 
-// Create manifest dynamically
-const manifestData = {
-    "name": "Gym Tracker Pro",
-    "short_name": "Gym Tracker",
-    "description": "Track your gym workouts with progressive overload",
-    "start_url": "./",
-    "display": "standalone",
-    "background_color": "#0f172a",
-    "theme_color": "#0ea5e9",
-    "orientation": "portrait",
-    "icons": [
-        {
-            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%230ea5e9'/%3E%3Cpath d='M256 120c-13.3 0-24 10.7-24 24v32h-32c-13.3 0-24 10.7-24 24s10.7 24 24 24h32v64h-32c-13.3 0-24 10.7-24 24s10.7 24 24 24h32v32c0 13.3 10.7 24 24 24s24-10.7 24-24v-32h32c13.3 0 24-10.7 24-24s-10.7-24-24-24h-32v-64h32c13.3 0 24-10.7 24-24s-10.7-24-24-24h-32v-32c0-13.3-10.7-24-24-24z' fill='white'/%3E%3C/svg%3E",
-            "sizes": "512x512",
-            "type": "image/svg+xml",
-            "purpose": "any maskable"
-        }
-    ]
-};
-
-const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/json' });
-const manifestURL = URL.createObjectURL(manifestBlob);
-document.getElementById('manifestPlaceholder').setAttribute('href', manifestURL);
-
+// Handle install prompt
 window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('Install prompt available');
     e.preventDefault();
     deferredPrompt = e;
     
+    // Show install prompt after 3 seconds
     setTimeout(() => {
-        installPrompt.classList.remove('hidden');
-    }, 2000);
+        if (!localStorage.getItem('installDismissed')) {
+            installPrompt.classList.remove('hidden');
+        }
+    }, 3000);
+});
+
+// Handle successful installation
+window.addEventListener('appinstalled', () => {
+    console.log('App installed successfully!');
+    installPrompt.classList.add('hidden');
+    deferredPrompt = null;
 });
 
 function installApp() {
     if (deferredPrompt) {
+        // Chrome/Edge on Android - use native install prompt
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then((choiceResult) => {
             if (choiceResult.outcome === 'accepted') {
-                console.log('App installed');
+                console.log('User accepted install');
+            } else {
+                console.log('User dismissed install');
             }
             deferredPrompt = null;
             installPrompt.classList.add('hidden');
         });
+    } else {
+        // Fallback - show manual instructions based on browser
+        const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+        const isAndroid = /Android/.test(navigator.userAgent);
+        
+        let message = 'To install this app:\n\n';
+        
+        if (isIOS) {
+            message += '1. Tap the Share button (↗️)\n';
+            message += '2. Scroll down and tap "Add to Home Screen"\n';
+            message += '3. Tap "Add" in the top-right corner';
+        } else if (isAndroid) {
+            message += '1. Tap the menu (⋮) in the top-right\n';
+            message += '2. Tap "Add to Home screen" or "Install app"\n';
+            message += '3. Tap "Add" or "Install"';
+        } else {
+            message += '1. Click the menu (⋮ or ⚙️) in your browser\n';
+            message += '2. Look for "Install app" or "Add to Home screen"\n';
+            message += '3. Follow the prompts';
+        }
+        
+        alert(message);
+        installPrompt.classList.add('hidden');
     }
 }
 
 function dismissInstall() {
     installPrompt.classList.add('hidden');
-    localStorage.setItem('installDismissed', 'true');
+    localStorage.setItem('installDismissed', Date.now());
 }
 
-// Register Service Worker
+// Register Service Worker for offline support
 if ('serviceWorker' in navigator) {
-    const swCode = `
-        const CACHE_NAME = 'gym-tracker-v1';
-        
-        self.addEventListener('install', (event) => {
-            self.skipWaiting();
-        });
-        
-        self.addEventListener('activate', (event) => {
-            event.waitUntil(clients.claim());
-        });
-        
-        self.addEventListener('fetch', (event) => {
-            event.respondWith(
-                caches.match(event.request).then((response) => {
-                    return response || fetch(event.request);
+    window.addEventListener('load', () => {
+        const swCode = `
+const CACHE_NAME = 'gym-tracker-v1';
+const urlsToCache = ['/'];
+
+self.addEventListener('install', (event) => {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            return cache.addAll(urlsToCache);
+        })
+    );
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cacheName) => {
+                    if (cacheName !== CACHE_NAME) {
+                        return caches.delete(cacheName);
+                    }
                 })
             );
-        });
-    `;
-    
-    const blob = new Blob([swCode], { type: 'application/javascript' });
-    const swURL = URL.createObjectURL(blob);
-    
-    navigator.serviceWorker.register(swURL).then(() => {
-        console.log('Service Worker registered');
-    }).catch((error) => {
-        console.log('Service Worker registration failed:', error);
+        })
+    );
+    return self.clients.claim();
+});
+
+self.addEventListener('fetch', (event) => {
+    event.respondWith(
+        caches.match(event.request).then((response) => {
+            return response || fetch(event.request);
+        })
+    );
+});
+        `;
+        
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const swURL = URL.createObjectURL(blob);
+        
+        navigator.serviceWorker.register(swURL)
+            .then((registration) => {
+                console.log('Service Worker registered:', registration.scope);
+            })
+            .catch((error) => {
+                console.log('Service Worker registration failed:', error);
+            });
     });
 }
 
@@ -601,27 +673,28 @@ const DEFAULT_SPLIT = {
         {
             id: 'push', name: 'Push Day',
             exercises: [
-                { id: 'ex1', name: 'Bench Press', weight: 60, sets: 3, repMin: 8, repMax: 12, warmupEnabled: false, warmupSets: 2, warmupPercentage: 50, history: [] },
-                { id: 'ex2', name: 'Overhead Press', weight: 40, sets: 3, repMin: 8, repMax: 12, warmupEnabled: false, warmupSets: 2, warmupPercentage: 50, history: [] }
+                { id: 'ex1', name: 'Bench Press', weight: 60, sets: 3, repMin: 8, repMax: 12, restTime: 120, warmupEnabled: false, warmupSets: 2, warmupPercentage: 50, history: [] },
+                { id: 'ex2', name: 'Overhead Press', weight: 40, sets: 3, repMin: 8, repMax: 12, restTime: 90, warmupEnabled: false, warmupSets: 2, warmupPercentage: 50, history: [] }
             ]
         },
         {
             id: 'pull', name: 'Pull Day',
             exercises: [
-                { id: 'ex6', name: 'Deadlift', weight: 100, sets: 3, repMin: 5, repMax: 8, warmupEnabled: true, warmupSets: 2, warmupPercentage: 50, history: [] },
-                { id: 'ex7', name: 'Barbell Row', weight: 60, sets: 3, repMin: 8, repMax: 12, warmupEnabled: false, warmupSets: 2, warmupPercentage: 50, history: [] }
+                { id: 'ex6', name: 'Deadlift', weight: 100, sets: 3, repMin: 5, repMax: 8, restTime: 180, warmupEnabled: true, warmupSets: 2, warmupPercentage: 50, history: [] },
+                { id: 'ex7', name: 'Barbell Row', weight: 60, sets: 3, repMin: 8, repMax: 12, restTime: 120, warmupEnabled: false, warmupSets: 2, warmupPercentage: 50, history: [] }
             ]
         },
         {
             id: 'legs', name: 'Legs Day',
             exercises: [
-                { id: 'ex11', name: 'Squat', weight: 80, sets: 3, repMin: 6, repMax: 10, warmupEnabled: true, warmupSets: 2, warmupPercentage: 50, history: [] },
-                { id: 'ex12', name: 'Leg Press', weight: 120, sets: 3, repMin: 10, repMax: 15, warmupEnabled: false, warmupSets: 2, warmupPercentage: 50, history: [] }
+                { id: 'ex11', name: 'Squat', weight: 80, sets: 3, repMin: 6, repMax: 10, restTime: 180, warmupEnabled: true, warmupSets: 2, warmupPercentage: 50, history: [] },
+                { id: 'ex12', name: 'Leg Press', weight: 120, sets: 3, repMin: 10, repMax: 15, restTime: 120, warmupEnabled: false, warmupSets: 2, warmupPercentage: 50, history: [] }
             ]
         }
     ],
     settings: { restTime: 120, theme: 'dark' },
-    stats: { totalWorkouts: 0, lastWorkoutDate: null }
+    stats: { totalWorkouts: 0, lastWorkoutDate: null },
+    activeWorkout: null
 };
 
 const Storage = {
@@ -686,6 +759,7 @@ const Storage = {
                 warmupEnabled: exerciseData.warmupEnabled || false,
                 warmupSets: parseInt(exerciseData.warmupSets) || 2,
                 warmupPercentage: parseInt(exerciseData.warmupPercentage) || 50,
+                restTime: parseInt(exerciseData.restTime) || 120,
                 history: []
             };
             day.exercises.push(newExercise);
@@ -708,6 +782,7 @@ const Storage = {
                 exercise.warmupEnabled = exerciseData.warmupEnabled || false;
                 exercise.warmupSets = parseInt(exerciseData.warmupSets) || 2;
                 exercise.warmupPercentage = parseInt(exerciseData.warmupPercentage) || 50;
+                exercise.restTime = parseInt(exerciseData.restTime) || 120;
                 this.saveData(data);
             }
         }
@@ -744,33 +819,36 @@ const Storage = {
     },
     saveWorkout(dayId, exerciseId, setsData) {
         const data = this.getData();
-        const exercise = this.getExercise(dayId, exerciseId);
+        const day = data.days.find(d => d.id === dayId);
+        if (!day) return null;
         
-        if (exercise) {
-            const workout = {
-                date: new Date().toISOString(),
-                weight: exercise.weight,
-                sets: setsData.filter(s => !s.isWarmup).map(s => s.reps),
-                warmupSets: setsData.filter(s => s.isWarmup).map(s => s.reps),
-                increased: false
-            };
+        const exercise = day.exercises.find(e => e.id === exerciseId);
+        if (!exercise) return null;
+        
+        const workout = {
+            date: new Date().toISOString(),
+            weight: exercise.weight,
+            sets: setsData.filter(s => !s.isWarmup).map(s => s.reps),
+            warmupSets: setsData.filter(s => s.isWarmup).map(s => s.reps),
+            increased: false
+        };
 
-            const workingSets = setsData.filter(s => !s.isWarmup);
-            const allSetsMaxReps = workingSets.every(s => s.reps >= exercise.repMax);
-            
-            if (allSetsMaxReps) {
-                exercise.weight += 2.5;
-                workout.increased = true;
-            }
-
-            exercise.history.push(workout);
-            data.stats.totalWorkouts++;
-            data.stats.lastWorkoutDate = new Date().toISOString();
-
-            this.saveData(data);
-            return workout;
+        const workingSets = setsData.filter(s => !s.isWarmup);
+        const allSetsMaxReps = workingSets.every(s => s.reps >= exercise.repMax);
+        
+        if (allSetsMaxReps && workingSets.length > 0) {
+            exercise.weight = parseFloat((exercise.weight + 2.5).toFixed(1));
+            workout.increased = true;
+            console.log('Weight increased to:', exercise.weight, 'for exercise:', exercise.name);
         }
-        return null;
+
+        exercise.history.push(workout);
+        data.stats.totalWorkouts++;
+        data.stats.lastWorkoutDate = new Date().toISOString();
+
+        const saved = this.saveData(data);
+        console.log('Workout saved:', saved, 'New weight:', exercise.weight);
+        return workout;
     },
     getLastWorkout(dayId, exerciseId) {
         const exercise = this.getExercise(dayId, exerciseId);
@@ -851,6 +929,25 @@ const Storage = {
             return true;
         }
         return false;
+    },
+    saveWorkoutState(state) {
+        try {
+            localStorage.setItem('workoutState', JSON.stringify(state));
+            return true;
+        } catch (e) {
+            return false;
+        }
+    },
+    getWorkoutState() {
+        try {
+            const state = localStorage.getItem('workoutState');
+            return state ? JSON.parse(state) : null;
+        } catch (e) {
+            return null;
+        }
+    },
+    clearWorkoutState() {
+        localStorage.removeItem('workoutState');
     }
 };
 
@@ -871,9 +968,16 @@ document.addEventListener('DOMContentLoaded', () => {
     loadTheme();
     renderHome();
     
-    if (!localStorage.getItem('installDismissed') && !window.matchMedia('(display-mode: standalone)').matches) {
+    // Check if already installed or if we should show install prompt
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    const installDismissTime = localStorage.getItem('installDismissed');
+    const daysSinceDismiss = installDismissTime ? (Date.now() - parseInt(installDismissTime)) / (1000 * 60 * 60 * 24) : 999;
+    
+    // Show prompt again after 7 days if dismissed
+    if (!isStandalone && daysSinceDismiss > 7) {
         setTimeout(() => {
-            if (!deferredPrompt) {
+            // If no install prompt event fired, show manual instructions
+            if (!deferredPrompt && !installPrompt.classList.contains('hidden')) {
                 installPrompt.classList.remove('hidden');
             }
         }, 5000);
@@ -907,9 +1011,17 @@ function showHome() {
 
 function showExercises(dayId) {
     currentDayId = dayId;
-    hideAllScreens();
-    document.getElementById('exercisesScreen').classList.add('active');
-    renderExercises();
+    
+    // Check if there's a saved workout for this day
+    const savedState = Storage.getWorkoutState();
+    if (savedState && savedState.dayId === dayId) {
+        // Show resume workout modal
+        showResumeWorkoutModal(savedState);
+    } else {
+        hideAllScreens();
+        document.getElementById('exercisesScreen').classList.add('active');
+        renderExercises();
+    }
 }
 
 function showWorkout(dayId, exerciseId) {
@@ -920,6 +1032,16 @@ function showWorkout(dayId, exerciseId) {
     currentSetNumber = 1;
     totalSets = (exercise.warmupEnabled ? exercise.warmupSets : 0) + exercise.sets;
     completedSetsData = [];
+    
+    // Save workout state
+    Storage.saveWorkoutState({
+        dayId: currentDayId,
+        exerciseId: currentExerciseId,
+        currentSetNumber: currentSetNumber,
+        totalSets: totalSets,
+        completedSetsData: completedSetsData,
+        workoutResults: workoutResults
+    });
     
     hideAllScreens();
     document.getElementById('workoutScreen').classList.add('active');
@@ -1130,7 +1252,7 @@ function completeSet() {
         
         workoutResults.push({
             exerciseName: exercise.name,
-            weight: exercise.weight - (workout.increased ? 2.5 : 0),
+            weight: workout.increased ? exercise.weight - 2.5 : exercise.weight,
             sets: completedSetsData.filter(s => !s.isWarmup).map(s => s.reps),
             increased: workout.increased
         });
@@ -1143,21 +1265,35 @@ function completeSet() {
                 const nextExercise = day.exercises[currentIndex + 1];
                 showWorkout(currentDayId, nextExercise.id);
             } else {
+                Storage.clearWorkoutState();
                 showSummary();
             }
         } else {
+            Storage.clearWorkoutState();
             showSummary();
         }
     } else {
         currentSetNumber++;
+        
+        // Save workout state
+        Storage.saveWorkoutState({
+            dayId: currentDayId,
+            exerciseId: currentExerciseId,
+            currentSetNumber: currentSetNumber,
+            totalSets: totalSets,
+            completedSetsData: completedSetsData,
+            workoutResults: workoutResults
+        });
+        
         startRestTimer();
         renderWorkout();
     }
 }
 
 function startRestTimer() {
-    const settings = Storage.getSettings();
-    timerSeconds = settings.restTime;
+    const exercise = Storage.getExercise(currentDayId, currentExerciseId);
+    timerSeconds = exercise.restTime || 120;
+    const totalTime = timerSeconds;
     timerPaused = false;
     
     const timerCard = document.getElementById('timerCard');
@@ -1175,7 +1311,7 @@ function startRestTimer() {
             timerSeconds--;
             updateTimerDisplay();
             
-            const progress = (timerSeconds / settings.restTime);
+            const progress = (timerSeconds / totalTime);
             const offset = circumference * (1 - progress);
             progressBar.style.strokeDashoffset = offset;
             
@@ -1202,6 +1338,7 @@ function exitWorkout() {
     if (timerInterval) clearInterval(timerInterval);
     if (confirm('Exit workout? Progress will be lost.')) {
         workoutResults = [];
+        Storage.clearWorkoutState();
         showExercises(currentDayId);
     }
 }
@@ -1278,6 +1415,52 @@ function editDayName() {
     }
 }
 
+function showResumeWorkoutModal(savedState) {
+    const exercise = Storage.getExercise(savedState.dayId, savedState.exerciseId);
+    const modalText = document.getElementById('resumeWorkoutText');
+    
+    if (exercise) {
+        modalText.textContent = `Continue ${exercise.name} - Set ${savedState.currentSetNumber}/${savedState.totalSets}`;
+    }
+    
+    document.getElementById('resumeWorkoutModal').classList.add('active');
+}
+
+function resumeWorkout() {
+    const savedState = Storage.getWorkoutState();
+    if (savedState) {
+        currentDayId = savedState.dayId;
+        currentExerciseId = savedState.exerciseId;
+        currentSetNumber = savedState.currentSetNumber;
+        totalSets = savedState.totalSets;
+        completedSetsData = savedState.completedSetsData || [];
+        workoutResults = savedState.workoutResults || [];
+        
+        document.getElementById('resumeWorkoutModal').classList.remove('active');
+        hideAllScreens();
+        document.getElementById('workoutScreen').classList.add('active');
+        renderWorkout();
+    }
+}
+
+function startNewWorkout() {
+    Storage.clearWorkoutState();
+    document.getElementById('resumeWorkoutModal').classList.remove('active');
+    hideAllScreens();
+    document.getElementById('exercisesScreen').classList.add('active');
+    renderExercises();
+}
+
+function cancelSavedWorkout() {
+    if (confirm('Are you sure? Your progress will be lost.')) {
+        Storage.clearWorkoutState();
+        document.getElementById('resumeWorkoutModal').classList.remove('active');
+        hideAllScreens();
+        document.getElementById('exercisesScreen').classList.add('active');
+        renderExercises();
+    }
+}
+
 function showAddExerciseModal() {
     editingExerciseId = null;
     document.getElementById('exerciseModalTitle').textContent = 'Add Exercise';
@@ -1286,6 +1469,7 @@ function showAddExerciseModal() {
     document.getElementById('exerciseSets').value = '3';
     document.getElementById('exerciseRepMin').value = '8';
     document.getElementById('exerciseRepMax').value = '12';
+    document.getElementById('exerciseRestTime').value = '120';
     document.getElementById('warmupEnabled').checked = false;
     document.getElementById('warmupInputs').classList.add('hidden');
     document.getElementById('deleteExerciseBtn').style.display = 'none';
@@ -1303,6 +1487,7 @@ function editExercise(exerciseId) {
     document.getElementById('exerciseSets').value = exercise.sets;
     document.getElementById('exerciseRepMin').value = exercise.repMin;
     document.getElementById('exerciseRepMax').value = exercise.repMax;
+    document.getElementById('exerciseRestTime').value = exercise.restTime || 120;
     document.getElementById('warmupEnabled').checked = exercise.warmupEnabled;
     document.getElementById('warmupSets').value = exercise.warmupSets || 2;
     document.getElementById('warmupPercentage').value = exercise.warmupPercentage || 50;
@@ -1322,6 +1507,7 @@ function saveExercise() {
     const sets = document.getElementById('exerciseSets').value;
     const repMin = document.getElementById('exerciseRepMin').value;
     const repMax = document.getElementById('exerciseRepMax').value;
+    const restTime = document.getElementById('exerciseRestTime').value;
     const warmupEnabled = document.getElementById('warmupEnabled').checked;
     const warmupSets = document.getElementById('warmupSets').value;
     const warmupPercentage = document.getElementById('warmupPercentage').value;
@@ -1336,7 +1522,7 @@ function saveExercise() {
         return;
     }
     
-    const exerciseData = { name, weight, sets, repMin, repMax, warmupEnabled, warmupSets, warmupPercentage };
+    const exerciseData = { name, weight, sets, repMin, repMax, restTime, warmupEnabled, warmupSets, warmupPercentage };
     
     if (editingExerciseId) {
         Storage.updateExercise(currentDayId, editingExerciseId, exerciseData);
@@ -1387,6 +1573,9 @@ function closeModal(modalId) {
     document.getElementById(modalId).classList.remove('active');
     if (modalId === 'addDayModal') {
         document.getElementById('newDayName').value = '';
+    }
+    if (modalId === 'exerciseModal') {
+        document.getElementById('warmupInputs').classList.add('hidden');
     }
 }
 
